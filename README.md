@@ -93,3 +93,8 @@ jupyter notebook ecommerce_logistics_analysis.ipynb
 
 *Marziyeh Eslamparasti — Business Analyst | Hamburg, Germany*  
 *[LinkedIn](https://linkedin.com/in/marziyeh-eslamparasti)*
+
+---
+## Dashboard
+
+ download the PDF: [link to PDF in repo]
