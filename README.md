@@ -1,130 +1,111 @@
 # E-Commerce Logistics & Delivery Performance Analysis
 
-**Author:** Marziyeh Eslamparasti — Business Analyst | Hamburg, Germany  
-**Dataset:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) — Kaggle  
-**Tools:** Python · Pandas · DuckDB (SQL) · Scikit-learn · Matplotlib  
-**Scope:** 96,470 real delivered orders · 2016–2018
+I used the Olist dataset to examine delivery reliability, customer reviews, regional and category differences, and whether information available at order time can help identify late-delivery risk.
 
----
+**Author:** Marziyeh Eslamparasti — Business Analyst, Hamburg
 
-## Business Problem
+**Dataset:** [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
-The Olist marketplace connects small Brazilian sellers to major e-commerce platforms. Management needs clarity on delivery performance, customer satisfaction drivers, and which operational areas require urgent attention.
+**Tools:** Python · Pandas · DuckDB (SQL) · Scikit-learn · Matplotlib
 
-**Five business questions answered:**
-1. Which product categories have the worst delivery performance?
-2. Which seller states are structurally failing on delivery?
-3. At what exact delay point does customer satisfaction collapse?
-4. Can we predict late deliveries before they happen?
-5. How are orders, revenue and satisfaction trending over time?
+**Scope:** 96,470 delivered orders from 2016–2018
 
----
+## Questions I looked at
 
-## Key Findings
+1. How reliable was delivery performance?
+2. Which product categories and seller states were associated with weaker results?
+3. How did lateness relate to customer review scores?
+4. Can order-time information help screen for late-delivery risk?
+5. How did orders, revenue, and service quality change over time?
 
-| Finding | Metric |
-|---------|--------|
-| Overall on-time delivery rate | **93.2%** |
-| Average delay when late | **10.6 days** — far above acceptable |
-| Satisfaction drop at first day late | **4.5 → 3.8** review score |
-| ML model accuracy (delay prediction) | **AUC 0.71** |
-| Revenue from late orders | **R$1.05M** at risk |
+## Headline results
 
----
+| Measure | Result | Interpretation |
+|---|---:|---|
+| On-time delivery rate | **93.2%** | Most delivered orders met the promised date |
+| Late delivered orders | **6,573 (6.8%)** | A material operational exception group |
+| Average delay among late orders | **10.6 days** | Late orders were often substantially late |
+| Average review: on time or early | **4.29 / 5** | Used as the descriptive comparison group |
+| Average review: 1–3 days late | **3.29 / 5** | Reviews were lower once the promise date was missed |
+| Revenue associated with late orders | **R$1.05M** | Exposure, not proven lost revenue |
 
-## Project Structure
+These are descriptive results from historical data. They show useful patterns, but they do not prove that a category, seller location, or delivery delay caused an outcome.
 
-```
+## Selected charts
+
+![KPI dashboard](reports/figures/chart1_kpi_dashboard.png)
+
+![Category performance](reports/figures/chart2_category_performance.png)
+
+![Customer satisfaction](reports/figures/chart5_satisfaction_analysis.png)
+
+![Time-series analysis](reports/figures/chart9_timeseries_analysis.png)
+
+All nine analysis figures and the dashboard PDF are available in [`reports/figures`](reports/figures).
+
+## What I did
+
+- Joined seven Olist source tables into one delivered-order dataset.
+- Defined delivery performance against the customer promise date.
+- Used DuckDB for reusable business queries and management scorecards.
+- Compared categories, seller states, quarters, and monthly trends.
+- Examined the relationship between delivery timing and review scores.
+- Segmented seller states with K-Means as an exploratory pattern-finding step.
+- Built an imbalance-aware logistic-regression benchmark for late-delivery screening.
+
+### A problem I found in the first model
+
+The first model produced a ROC-AUC of about **0.71**, but at the default threshold it identified only **3 of 1,307** late orders—about **0.2% recall**. That result is not useful for an operations team, even though the AUC initially looks reasonable.
+
+I kept `chart6_prediction_model.png` to document the original result. In the revised notebook, `late = 1` is the target, categorical variables are one-hot encoded, class weights are used, and the threshold is selected on validation data. The final evaluation reports ROC-AUC, PR-AUC, precision, recall, F1, and the confusion matrix.
+
+It is still a benchmark, not a production model. Before using it in a real workflow, I would define the costs of missed delays and false alerts, validate it on later orders, and monitor performance over time.
+
+## Repository structure
+
+```text
 ecommerce-logistics-analysis/
-│
-├── README.md
-├── requirements.txt
-├── LICENSE
-├── .gitignore
-│
+├── data/
+│   ├── README.md
+│   └── raw/                         # local source CSVs; not committed
 ├── notebooks/
-│   └── ecommerce_logistics_analysis.ipynb   ← main analysis
-│
-├── src/
-│   └── utils.py                             ← helper functions
-│
+│   └── ecommerce_logistics_analysis.ipynb
 ├── reports/
-│   └── figures/                             ← all charts (PNG)
-│       ├── chart1_kpi_dashboard.png
-│       ├── chart2_category_performance.png
-│       ├── chart3_state_performance.png
-│       ├── chart4_monthly_trends.png
-│       ├── chart5_satisfaction_analysis.png
-│       ├── chart6_prediction_model.png
-│       ├── chart7_breakpoint_analysis.png
-│       ├── chart8_seller_segmentation.png
-│       └── chart9_timeseries_analysis.png
-│
-└── data/
-    ├── README.md                            ← how to get the data
-    └── raw/                                 ← place Kaggle CSV files here
+│   └── figures/
+├── src/
+│   └── utils.py
+├── .gitignore
+├── LICENSE
+├── README.md
+└── requirements.txt
 ```
 
----
-
-## Dashboard Preview
-
-![KPI Dashboard](reports/figures/chart1_kpi_dashboard.png)
-
-![Category Performance](reports/figures/chart2_category_performance.png)
-
-![State Performance](reports/figures/chart3_state_performance.png)
-
-![Monthly Trends](reports/figures/chart4_monthly_trends.png)
-
-![Customer Satisfaction](reports/figures/chart5_satisfaction_analysis.png)
-
-![Delay Prediction Model](reports/figures/chart6_prediction_model.png)
-
-![Breakpoint Analysis](reports/figures/chart7_breakpoint_analysis.png)
-
-![Seller Segmentation](reports/figures/chart8_seller_segmentation.png)
-
-![Time Series Analysis](reports/figures/chart9_timeseries_analysis.png)
-
----
-
-## How to Run
+## Run locally
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/marziyeh-ba/ecommerce-logistics-analysis
+git clone https://github.com/marziyeh-ba/ecommerce-logistics-analysis.git
 cd ecommerce-logistics-analysis
-
-# 2. Install dependencies
+python -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-# 3. Download the dataset
-# Go to: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
-# Download and place all CSV files in: data/raw/
-
-# 4. Run the notebook
 jupyter notebook notebooks/ecommerce_logistics_analysis.ipynb
 ```
 
----
+Before running the notebook, download the Olist dataset and place the seven required CSV files in `data/raw/`. Exact filenames are listed in [`data/README.md`](data/README.md).
 
-## Analysis Sections
+DuckDB is used locally for SQL analysis. The business logic can be transferred to PostgreSQL, Snowflake, or Azure SQL, but functions, identifiers, and syntax may require adaptation.
 
-| Section | What it covers |
-|---------|---------------|
-| Data preparation | Merging 7 Kaggle files, engineering delivery delay feature |
-| KPI dashboard | 6 headline metrics for management overview |
-| Category analysis | On-time rate and delay by product category |
-| SQL queries | 4 business queries written in DuckDB |
-| Regional analysis | Delivery performance by seller state |
-| Prediction model | Logistic Regression + Gradient Boosting — AUC 0.71 |
-| Breakpoint analysis | Exact delay threshold where satisfaction collapses |
-| Seller segmentation | K-Means clustering of states into performance tiers |
-| Time series | Trend, seasonality, and quality over time |
-| Recommendations | Prioritised action list with business impact |
+## Notes on interpretation
+
+- The data covers one historical marketplace and should not be treated as current Brazilian e-commerce performance.
+- Regional and category comparisons are descriptive; carrier, route, buyer-location, and product-level controls would be needed for causal conclusions.
+- “Revenue associated with late orders” is exposure within affected orders, not a measured financial loss.
+- Cluster labels are analytical summaries, not formal supplier ratings.
+
+## Methods used
+
+Business analysis · KPI design · SQL · Python · data preparation · exploratory analysis · customer-experience analysis · predictive-model evaluation · stakeholder-oriented communication
 
 ---
 
-*Marziyeh Eslamparasti | Business Analyst | Hamburg, Germany*  
-*[LinkedIn](https://linkedin.com/in/marziyeh-eslamparasti) · [GitHub](https://github.com/marziyeh-ba)*
+[LinkedIn](https://linkedin.com/in/marziyeh-eslamparasti) · [GitHub portfolio](https://github.com/marziyeh-ba)
